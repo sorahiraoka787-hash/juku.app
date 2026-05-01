@@ -22,7 +22,6 @@ export default function Page() {
       });
 
     if (error || !data.session) {
-      console.error("ログインエラー:", error);
       alert("ログイン失敗");
       setLoading(false);
       return;
@@ -30,26 +29,12 @@ export default function Page() {
 
     const user = data.user;
 
-    // ② 権限取得（ここが修正ポイント）
-    const { data: profile, error: roleError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
-
-    console.log("user:", user);
-    console.log("profile:", profile);
-    console.log("roleError:", roleError);
+    // ② role判定（ここがシンプル版）
+    const adminEmail = "sorahiraoka787@gmail.com";
 
     setLoading(false);
 
-    if (roleError || !profile) {
-      alert("権限取得エラー");
-      return;
-    }
-
-    // ③ 画面遷移
-    if (profile.role === "admin") {
+    if (user.email === adminEmail) {
       router.push("/admin");
     } else {
       router.push("/teacher");
