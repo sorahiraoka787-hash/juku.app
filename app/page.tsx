@@ -39,12 +39,10 @@ export default function Page() {
 
       // 画面遷移
       if (user.email === adminEmail) {
-        console.log("④ admin遷移");
-        router.push("/admin");
-      } else {
-        console.log("④ teacher遷移");
-        router.push("/teacher");
-      }
+  window.location.href = "/admin";
+} else {
+  window.location.href = "/teacher";
+}
 
     } catch (e) {
       console.error("エラー:", e);
