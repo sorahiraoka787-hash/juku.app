@@ -1,7 +1,10 @@
+import Providers from "./providers";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient();
+export const metadata = {
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -11,16 +14,8 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
-
-export const metadata = {
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
