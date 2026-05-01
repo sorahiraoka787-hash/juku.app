@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-export default function AdminDashboard() {
+export default function AdminPage() {
   return (
     <main className="p-6 space-y-6">
 
@@ -13,24 +13,31 @@ export default function AdminDashboard() {
       <div className="grid gap-4">
 
         <Link
-          href="/admin/teachers"
-          className="border p-4 rounded hover:bg-gray-50"
-        >
-          👨‍🏫 講師管理
-        </Link>
-
-        <Link
           href="/admin/shifts"
           className="border p-4 rounded hover:bg-gray-50"
         >
-          📅 シフト一覧
+          📅 シフト管理
         </Link>
 
         <Link
           href="/admin/payroll"
           className="border p-4 rounded hover:bg-gray-50"
         >
-          💰 人件費管理
+          💰 給与管理
+        </Link>
+
+        <Link
+          href="/admin/teachers"
+          className="border p-4 rounded hover:bg-gray-50"
+        >
+          👨‍🏫 講師一覧
+        </Link>
+
+        <Link
+          href="/admin/attendance"
+          className="border p-4 rounded hover:bg-gray-50"
+        >
+          ⏱ 勤怠確認
         </Link>
 
       </div>

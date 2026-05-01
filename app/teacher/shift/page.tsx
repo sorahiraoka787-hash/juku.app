@@ -3,88 +3,98 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function ShiftPage() {
-  const [date, setDate] = useState("");
-  const [status, setStatus] = useState("available");
-  const [loading, setLoading] = useState(false);
+type Shift = {
+  id: number;
+  email: string;
+  date: string;
+  status: "available" | "unavailable";
+};
+
+export default function TeacherShiftPage() {
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  const end = new Date(year, month + 1, 0);
+
+  const days = Array.from(
+    { length: end.getDate() },
+    (_, i) => new Date(year, month, i + 1)
+  );
+
+  // 🔹 ユーザー取得（ここが修正ポイント）
+  const fetchUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    setUserEmail(user?.email || "");
+  };
+
+  const fetchShifts = async () => {
+    const { data, error } = await supabase
+      .from("shifts")
+      .select("*");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setShifts((data as Shift[]) || []);
+  };
 
   useEffect(() => {
-    setDate(new Date().toISOString().slice(0, 10));
+    fetchUser();
+    fetchShifts();
   }, []);
 
-  const submitShift = async () => {
-    try {
-      setLoading(true);
-
-      const { data: userData, error: userError } =
-        await supabase.auth.getUser();
-
-      if (userError || !userData.user?.email) {
-        alert("ログイン情報が取得できません");
-        return;
-      }
-
-      const email = userData.user.email;
-
-      const { error } = await supabase
-        .from("shifts")
-        .insert([
-          {
-            email,
-            date,
-            status,
-          },
-        ]);
-
-      if (error) {
-        console.error(error);
-        alert("送信失敗");
-        return;
-      }
-
-      alert("シフト提出完了");
-
-    } catch (e) {
-      console.error("unexpected error:", e);
-      alert("エラーが発生しました");
-    } finally {
-      setLoading(false);
-    }
+  const getShift = (date: string) => {
+    return shifts.find((s) => s.date === date);
   };
 
   return (
     <main className="p-6 space-y-6">
 
       <h1 className="text-2xl font-bold">
-        シフト提出
+        シフト確認（閲覧のみ）
       </h1>
 
-      {/* 日付 */}
-      <input
-        type="date"
-        className="border p-2"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      />
+      {/* カレンダー */}
+      <div className="grid grid-cols-7 gap-2">
 
-      {/* 状態 */}
-      <select
-        className="border p-2 block"
-        value={status}
-        onChange={(e) => setStatus(e.target.value)}
-      >
-        <option value="available">出勤可能</option>
-        <option value="unavailable">不可</option>
-      </select>
+        {days.map((day) => {
+          const dateStr = day.toISOString().slice(0, 10);
+          const shift = getShift(dateStr);
 
-      {/* 送信 */}
-      <button
-        onClick={submitShift}
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
-      >
-        {loading ? "送信中..." : "提出"}
-      </button>
+          const isMine = shift?.email === userEmail;
+
+          return (
+            <div
+              key={dateStr}
+              className={`border p-2 rounded text-sm
+                ${
+                  shift?.status === "available"
+                    ? "bg-green-100"
+                    : shift?.status === "unavailable"
+                    ? "bg-red-100"
+                    : ""
+                }
+                ${isMine ? "border-blue-500 border-2" : ""}
+              `}
+            >
+              <p>{day.getDate()}</p>
+              <p className="text-xs">
+                {shift?.status || "-"}
+              </p>
+            </div>
+          );
+        })}
+
+      </div>
 
     </main>
   );
