@@ -6,30 +6,50 @@ import { supabase } from "@/lib/supabase";
 export default function ShiftPage() {
   const [date, setDate] = useState("");
   const [status, setStatus] = useState("available");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setDate(new Date().toISOString().slice(0, 10));
   }, []);
 
   const submitShift = async () => {
-    const user = await supabase.auth.getUser();
+    try {
+      setLoading(true);
 
-    const email = user.data.user?.email;
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
 
-    const { error } = await supabase.from("shifts").insert([
-      {
-        email,
-        date,
-        status,
-      },
-    ]);
+      if (userError || !userData.user?.email) {
+        alert("ログイン情報が取得できません");
+        return;
+      }
 
-    if (error) {
-      alert("送信失敗");
-      return;
+      const email = userData.user.email;
+
+      const { error } = await supabase
+        .from("shifts")
+        .insert([
+          {
+            email,
+            date,
+            status,
+          },
+        ]);
+
+      if (error) {
+        console.error(error);
+        alert("送信失敗");
+        return;
+      }
+
+      alert("シフト提出完了");
+
+    } catch (e) {
+      console.error("unexpected error:", e);
+      alert("エラーが発生しました");
+    } finally {
+      setLoading(false);
     }
-
-    alert("シフト提出完了");
   };
 
   return (
@@ -60,9 +80,10 @@ export default function ShiftPage() {
       {/* 送信 */}
       <button
         onClick={submitShift}
-        className="bg-blue-600 text-white px-4 py-2"
+        disabled={loading}
+        className="bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
       >
-        提出
+        {loading ? "送信中..." : "提出"}
       </button>
 
     </main>

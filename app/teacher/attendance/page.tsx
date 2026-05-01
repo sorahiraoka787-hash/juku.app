@@ -7,26 +7,59 @@ export default function AttendancePage() {
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const submit = async () => {
-    const user = await supabase.auth.getUser();
-    const email = user.data.user?.email;
+    try {
+      setLoading(true);
 
-    const { error } = await supabase.from("work-record").insert([
-      {
-        email,
-        date,
-        startTime,
-        endTime,
-      },
-    ]);
+      // ログイン確認
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
 
-    if (error) {
-      alert("送信失敗");
-      return;
+      if (userError || !userData.user?.email) {
+        alert("ログイン情報が取得できません");
+        return;
+      }
+
+      const email = userData.user.email;
+
+      // 入力チェック
+      if (!date || !startTime || !endTime) {
+        alert("すべて入力してください");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("work_record") // ← テーブル名注意
+        .insert([
+          {
+            email,
+            date,
+            startTime,
+            endTime,
+          },
+        ]);
+
+      if (error) {
+        console.error(error);
+        alert("送信失敗");
+        return;
+      }
+
+      alert("勤怠送信完了");
+
+      // リセット
+      setDate("");
+      setStartTime("");
+      setEndTime("");
+
+    } catch (e) {
+      console.error("unexpected error:", e);
+      alert("エラーが発生しました");
+    } finally {
+      setLoading(false);
     }
-
-    alert("勤怠送信完了");
   };
 
   return (
@@ -59,9 +92,10 @@ export default function AttendancePage() {
 
       <button
         onClick={submit}
-        className="bg-blue-600 text-white px-4 py-2"
+        disabled={loading}
+        className="bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
       >
-        送信
+        {loading ? "送信中..." : "送信"}
       </button>
 
     </main>

@@ -5,43 +5,71 @@ import { supabase } from "@/lib/supabase";
 
 export default function PayrollPage() {
   const [result, setResult] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     calc();
   }, []);
 
   const calc = async () => {
-    const { data: works } = await supabase.from("work-record").select("*");
-    const { data: teachers } = await supabase.from("teachers").select("*");
+    try {
+      setLoading(true);
 
-    if (!works || !teachers) return;
+      // 勤務データ
+      const { data: works, error: worksError } = await supabase
+        .from("work_record") // ← テーブル名ここ重要
+        .select("*");
 
-    const month = new Date().toISOString().slice(0, 7);
+      // 講師データ
+      const { data: teachers, error: teachersError } = await supabase
+        .from("teachers")
+        .select("*");
 
-    const monthly = works.filter((w) =>
-      w.date.startsWith(month)
-    );
+      if (worksError || teachersError) {
+        console.error(worksError || teachersError);
+        setLoading(false);
+        return;
+      }
 
-    const res = teachers.map((t) => {
-      const myWorks = monthly.filter(
-        (w) => w.email === t.email
+      if (!works || !teachers) {
+        setLoading(false);
+        return;
+      }
+
+      const month = new Date().toISOString().slice(0, 7);
+
+      const monthly = works.filter((w) =>
+        w.date?.startsWith(month)
       );
 
-      const totalHours = myWorks.reduce((sum, w) => {
-        const [sh, sm] = w.startTime.split(":").map(Number);
-        const [eh, em] = w.endTime.split(":").map(Number);
+      const res = teachers.map((t) => {
+        const myWorks = monthly.filter(
+          (w) => w.email === t.email
+        );
 
-        return sum + (eh + em / 60 - (sh + sm / 60));
-      }, 0);
+        const totalHours = myWorks.reduce((sum, w) => {
+          if (!w.startTime || !w.endTime) return sum;
 
-      return {
-        email: t.email,
-        hours: totalHours,
-        salary: totalHours * (t.hourlyWage || 0),
-      };
-    });
+          const [sh, sm] = w.startTime.split(":").map(Number);
+          const [eh, em] = w.endTime.split(":").map(Number);
 
-    setResult(res);
+          return sum + (eh + em / 60 - (sh + sm / 60));
+        }, 0);
+
+        return {
+          email: t.email,
+          hours: totalHours,
+          salary: totalHours * (t.hourlyWage || 0),
+        };
+      });
+
+      setResult(res);
+
+    } catch (e) {
+      console.error("error:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,23 +79,29 @@ export default function PayrollPage() {
         今月の給与
       </h1>
 
-      <div className="space-y-3">
+      {loading && (
+        <p>読み込み中...</p>
+      )}
 
-        {result.map((r, i) => (
-          <div key={i} className="border p-3 rounded">
+      {!loading && (
+        <div className="space-y-3">
 
-            <p className="font-bold">{r.email}</p>
+          {result.map((r, i) => (
+            <div key={i} className="border p-3 rounded">
 
-            <p>勤務時間：{r.hours.toFixed(2)}h</p>
+              <p className="font-bold">{r.email}</p>
 
-            <p className="text-green-600 font-bold">
-              給与：¥{r.salary.toLocaleString()}
-            </p>
+              <p>勤務時間：{r.hours.toFixed(2)}h</p>
 
-          </div>
-        ))}
+              <p className="text-green-600 font-bold">
+                給与：¥{r.salary.toLocaleString()}
+              </p>
 
-      </div>
+            </div>
+          ))}
+
+        </div>
+      )}
 
     </main>
   );
