@@ -13,7 +13,7 @@ export default function AdminPage() {
       <div className="grid gap-4">
 
         <Link
-          href="/admin/shifts"
+          href="/admin/shift"
           className="border p-4 rounded hover:bg-gray-50"
         >
           📅 シフト管理

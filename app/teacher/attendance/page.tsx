@@ -5,35 +5,47 @@ import { supabase } from "@/lib/supabase";
 
 export default function AttendancePage() {
   const [date, setDate] = useState("");
-  const [startHour, setStartHour] = useState<number>(9);
-  const [loading, setLoading] = useState(false);
+  const [startTime, setStartTime] = useState("");
+  const [hours, setHours] = useState(1);
 
-  const hours = Array.from({ length: 14 }, (_, i) => i + 9); // 9〜22時
+  const timeOptions = [
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00",
+    "19:00",
+    "20:00",
+    "21:00",
+  ];
+
+  const hourOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
   const submit = async () => {
-    setLoading(true);
+    const user = await supabase.auth.getUser();
+    const email = user.data.user?.email;
+    const user_id = user.data.user?.id;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const email = user?.email;
-
-    if (!email || !date) {
-      alert("入力してください");
-      setLoading(false);
+    if (!email || !user_id || !date || !startTime) {
+      alert("未入力があります");
       return;
     }
 
     const { error } = await supabase.from("work_records").insert([
       {
+        user_id,
         email,
         date,
-        startHour,
+        start_time: startTime,
+        hours,
       },
     ]);
-
-    setLoading(false);
 
     if (error) {
       console.error(error);
@@ -41,9 +53,11 @@ export default function AttendancePage() {
       return;
     }
 
-    alert("勤怠登録完了");
+    alert("勤怠送信完了");
+
     setDate("");
-    setStartHour(9);
+    setStartTime("");
+    setHours(1);
   };
 
   return (
@@ -56,22 +70,34 @@ export default function AttendancePage() {
       {/* 日付 */}
       <input
         type="date"
-        className="border p-2 block"
+        className="border p-2 block w-full"
         value={date}
         onChange={(e) => setDate(e.target.value)}
       />
 
-      {/* 時間（プルダウン） */}
+      {/* 開始時間（プルダウン） */}
       <select
-        className="border p-2 block"
-        value={startHour}
-        onChange={(e) =>
-          setStartHour(Number(e.target.value))
-        }
+        className="border p-2 block w-full"
+        value={startTime}
+        onChange={(e) => setStartTime(e.target.value)}
       >
-        {hours.map((h) => (
+        <option value="">開始時間を選択</option>
+        {timeOptions.map((t) => (
+          <option key={t} value={t}>
+            {t}
+          </option>
+        ))}
+      </select>
+
+      {/* 勤務時間（hours） */}
+      <select
+        className="border p-2 block w-full"
+        value={hours}
+        onChange={(e) => setHours(Number(e.target.value))}
+      >
+        {hourOptions.map((h) => (
           <option key={h} value={h}>
-            {h}:00 ～ {h + 1}:00
+            {h}時間
           </option>
         ))}
       </select>
@@ -79,10 +105,9 @@ export default function AttendancePage() {
       {/* 送信 */}
       <button
         onClick={submit}
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2"
+        className="bg-blue-600 text-white px-4 py-2 w-full"
       >
-        {loading ? "送信中..." : "送信"}
+        送信
       </button>
 
     </main>

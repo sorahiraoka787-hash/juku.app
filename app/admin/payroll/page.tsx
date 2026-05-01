@@ -3,105 +3,113 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+type Teacher = {
+  id: string;
+  email: string;
+  hourlyWage: number;
+};
+
+type WorkRecord = {
+  email: string;
+  date: string;
+  hours: number;
+};
+
+type SalaryRow = {
+  email: string;
+  hours: number;
+  salary: number;
+};
+
 export default function PayrollPage() {
-  const [result, setResult] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<SalaryRow[]>([]);
+  const [month, setMonth] = useState("");
 
   useEffect(() => {
-    calc();
+    const now = new Date();
+    setMonth(now.toISOString().slice(0, 7));
   }, []);
 
+  useEffect(() => {
+    if (month) calc();
+  }, [month]);
+
   const calc = async () => {
-    try {
-      setLoading(true);
+    const { data: teachers } = await supabase
+      .from("teachers")
+      .select("*");
 
-      // 勤務データ
-      const { data: works, error: worksError } = await supabase
-        .from("work_record") // ← テーブル名ここ重要
-        .select("*");
+    const { data: works } = await supabase
+      .from("work_records")
+      .select("*");
 
-      // 講師データ
-      const { data: teachers, error: teachersError } = await supabase
-        .from("teachers")
-        .select("*");
+    if (!teachers || !works) return;
 
-      if (worksError || teachersError) {
-        console.error(worksError || teachersError);
-        setLoading(false);
-        return;
-      }
+    // 今月データだけ抽出
+    const monthly = (works as WorkRecord[]).filter((w) =>
+      w.date.startsWith(month)
+    );
 
-      if (!works || !teachers) {
-        setLoading(false);
-        return;
-      }
+    const res: SalaryRow[] = (teachers as Teacher[]).map((t) => {
+      const myWork = monthly.filter((w) => w.email === t.email);
 
-      const month = new Date().toISOString().slice(0, 7);
-
-      const monthly = works.filter((w) =>
-        w.date?.startsWith(month)
+      const totalHours = myWork.reduce(
+        (sum, w) => sum + (w.hours || 0),
+        0
       );
 
-      const res = teachers.map((t) => {
-        const myWorks = monthly.filter(
-          (w) => w.email === t.email
-        );
+      return {
+        email: t.email,
+        hours: totalHours,
+        salary: totalHours * (t.hourlyWage || 0),
+      };
+    });
 
-        const totalHours = myWorks.reduce((sum, w) => {
-          if (!w.startTime || !w.endTime) return sum;
-
-          const [sh, sm] = w.startTime.split(":").map(Number);
-          const [eh, em] = w.endTime.split(":").map(Number);
-
-          return sum + (eh + em / 60 - (sh + sm / 60));
-        }, 0);
-
-        return {
-          email: t.email,
-          hours: totalHours,
-          salary: totalHours * (t.hourlyWage || 0),
-        };
-      });
-
-      setResult(res);
-
-    } catch (e) {
-      console.error("error:", e);
-    } finally {
-      setLoading(false);
-    }
+    setResult(res);
   };
 
   return (
     <main className="p-6 space-y-6">
 
       <h1 className="text-2xl font-bold">
-        今月の給与
+        給与管理
       </h1>
 
-      {loading && (
-        <p>読み込み中...</p>
-      )}
+      {/* 月選択 */}
+      <input
+        type="month"
+        value={month}
+        onChange={(e) => setMonth(e.target.value)}
+        className="border p-2"
+      />
 
-      {!loading && (
-        <div className="space-y-3">
+      {/* 結果 */}
+      <div className="space-y-3 mt-4">
 
-          {result.map((r, i) => (
-            <div key={i} className="border p-3 rounded">
+        {result.map((r) => (
+          <div
+            key={r.email}
+            className="border p-4 rounded flex justify-between"
+          >
 
-              <p className="font-bold">{r.email}</p>
-
-              <p>勤務時間：{r.hours.toFixed(2)}h</p>
-
-              <p className="text-green-600 font-bold">
-                給与：¥{r.salary.toLocaleString()}
+            <div>
+              <p className="font-bold">
+                {r.email.split("@")[0]}
               </p>
 
+              <p className="text-sm text-gray-500">
+                勤務：{r.hours.toFixed(1)}h
+              </p>
             </div>
-          ))}
 
-        </div>
-      )}
+            <div className="text-green-600 font-bold text-lg">
+              ¥{r.salary.toLocaleString()}
+            </div>
+
+          </div>
+        ))}
+
+      </div>
 
     </main>
   );
