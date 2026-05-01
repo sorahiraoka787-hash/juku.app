@@ -12,32 +12,45 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    setLoading(true);
+    console.log("① クリックされた");
 
-    // ① ログイン
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    try {
+      setLoading(true);
 
-    if (error || !data.session) {
-      alert("ログイン失敗");
-      setLoading(false);
-      return;
-    }
+      // ログイン
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-    const user = data.user;
+      console.log("② auth結果", { data, error });
 
-    // ② role判定（ここがシンプル版）
-    const adminEmail = "sorahiraoka787@gmail.com";
+      if (error || !data.session) {
+        alert("ログイン失敗");
+        return;
+      }
 
-    setLoading(false);
+      const user = data.user;
+      console.log("③ user", user);
 
-    if (user.email === adminEmail) {
-      router.push("/admin");
-    } else {
-      router.push("/teacher");
+      // 管理者メール
+      const adminEmail = "sorahiraoka787@gmail.com";
+
+      // 画面遷移
+      if (user.email === adminEmail) {
+        console.log("④ admin遷移");
+        router.push("/admin");
+      } else {
+        console.log("④ teacher遷移");
+        router.push("/teacher");
+      }
+
+    } catch (e) {
+      console.error("エラー:", e);
+      alert("エラー発生");
+    } finally {
+      setLoading(false); // ← これでボタン固まらない
     }
   };
 
@@ -65,6 +78,7 @@ export default function Page() {
         />
 
         <button
+          type="button"
           onClick={handleLogin}
           disabled={loading}
           className="bg-blue-600 text-white w-full p-2 rounded"
