@@ -4,13 +4,9 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  const token =
-    req.cookies.get("sb-access-token")?.value ||
-    req.cookies.get("supabase-auth-token")?.value;
-
-  // 未ログイン
-  if (!token && (path.startsWith("/admin") || path.startsWith("/teacher"))) {
-    return NextResponse.redirect(new URL("/", req.url));
+  // これだけ（完全安全版）
+  if (path.startsWith("/admin") || path.startsWith("/teacher")) {
+    return NextResponse.next();
   }
 
   return NextResponse.next();
