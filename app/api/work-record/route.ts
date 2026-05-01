@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   const { data, error } = await supabase
-    .from("workRecord")
+    .from("work_record")
     .select("*")
     .order("id", { ascending: false });
 
@@ -19,7 +19,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const { error } = await supabase.from("workRecord").insert({
+  const { error } = await supabase.from("work_record").insert({
     teacher: body.teacher,
     date: body.date,
     startTime: body.startTime,
