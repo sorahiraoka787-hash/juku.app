@@ -14,7 +14,7 @@ export default function Page() {
   const handleLogin = async () => {
     setLoading(true);
 
-    // ① Supabaseログイン
+    // ① ログイン
     const { data, error } =
       await supabase.auth.signInWithPassword({
         email,
@@ -22,6 +22,7 @@ export default function Page() {
       });
 
     if (error || !data.session) {
+      console.error("ログインエラー:", error);
       alert("ログイン失敗");
       setLoading(false);
       return;
@@ -29,22 +30,26 @@ export default function Page() {
 
     const user = data.user;
 
-    // ② role取得
+    // ② 権限取得（ここが修正ポイント）
     const { data: profile, error: roleError } = await supabase
-      .from("users")
+      .from("profiles")
       .select("role")
-      .eq("email", user.email)
+      .eq("user_id", user.id)
       .single();
+
+    console.log("user:", user);
+    console.log("profile:", profile);
+    console.log("roleError:", roleError);
 
     setLoading(false);
 
-    if (roleError) {
+    if (roleError || !profile) {
       alert("権限取得エラー");
       return;
     }
 
-    // ③ 画面振り分け
-    if (profile?.role === "admin") {
+    // ③ 画面遷移
+    if (profile.role === "admin") {
       router.push("/admin");
     } else {
       router.push("/teacher");
