@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+}
+
+/* 承認済みの日 */
+.approved-day {
+  background: #22c55e !important;
+  color: white !important;
+  border-radius: 8px;
+}
+
+.rejected-day {
+  background: #ef4444 !important;
+  color: white !important;
+  border-radius: 8px;
+}
+
+/* カレンダー全体の安定化 */
+.react-calendar__tile {
+  border-radius: 8px;
+}
+
+/* hover時の見やすさ（任意だけどおすすめ） */
+.react-calendar__tile:hover {
+  background: #e5e7eb;
+}
+
+/* カレンダー全体の余白調整（任意） */
+.react-calendar {
+  border: none;
+  font-family: inherit;
+}
