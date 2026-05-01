@@ -1,27 +1,34 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
-  const shifts = await prisma.shift.findMany({
-    orderBy: {
-      id: "desc",
-    },
-  });
+  const { data, error } = await supabase
+    .from("shifts")
+    .select("*")
+    .order("id", { ascending: false });
 
-  return NextResponse.json({ shifts });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ shifts: data });
 }
 
 export async function POST(req: Request) {
   const body = await req.json();
 
-  await prisma.shift.create({
-    data: {
+  const { error } = await supabase.from("shifts").insert([
+    {
       date: body.date,
       teacher: body.teacher,
       time: body.time,
       subject: body.subject,
     },
-  });
+  ]);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
@@ -29,11 +36,14 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const body = await req.json();
 
-  await prisma.shift.delete({
-    where: {
-      id: body.id,
-    },
-  });
+  const { error } = await supabase
+    .from("shifts")
+    .delete()
+    .eq("id", body.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
