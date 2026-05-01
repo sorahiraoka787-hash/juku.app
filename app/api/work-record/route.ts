@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
-  const data =
-    await prisma.workRecord.findMany({
-      orderBy: {
-        id: "desc",
-      },
-    });
+  const { data, error } = await supabase
+    .from("workRecord")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({
     records: data,
@@ -17,15 +19,17 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  await prisma.workRecord.create({
-    data: {
-      teacher: body.teacher,
-      date: body.date,
-      startTime: body.startTime,
-      endTime: body.endTime,
-      subject: body.subject,
-    },
+  const { error } = await supabase.from("workRecord").insert({
+    teacher: body.teacher,
+    date: body.date,
+    startTime: body.startTime,
+    endTime: body.endTime,
+    subject: body.subject,
   });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
