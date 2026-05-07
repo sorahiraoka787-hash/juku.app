@@ -49,7 +49,7 @@ export default function AttendancePage() {
 
     if (error) {
       console.error(error);
-      alert("送信失敗");
+      alert(`message: ${error.message}\ndetails: ${error.details}\nhint: ${error.hint}`);
       return;
     }
 
