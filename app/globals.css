@@ -2,31 +2,45 @@ body {
   margin: 0;
 }
 
-/* 承認済みの日 */
-.approved-day {
-  background: #22c55e !important;
-  color: white !important;
-  border-radius: 8px;
-}
-
-.rejected-day {
-  background: #ef4444 !important;
-  color: white !important;
-  border-radius: 8px;
-}
-
-/* カレンダー全体の安定化 */
-.react-calendar__tile {
-  border-radius: 8px;
-}
-
-/* hover時の見やすさ（任意だけどおすすめ） */
-.react-calendar__tile:hover {
-  background: #e5e7eb;
-}
-
-/* カレンダー全体の余白調整（任意） */
+/* =========================
+   react-calendar 基本
+========================= */
 .react-calendar {
   border: none;
   font-family: inherit;
+}
+
+/* カレンダーの1マス */
+.react-calendar__tile {
+  border-radius: 8px !important;
+  color: black;
+}
+
+/* hover（軽く残すが色は邪魔しない） */
+.react-calendar__tile:hover {
+  background: #f3f4f6 !important;
+}
+
+/* 選択状態（react-calendarデフォルト潰す） */
+.react-calendar__tile--active {
+  background: transparent !important;
+}
+
+/* =========================
+   カスタム状態カラー
+========================= */
+
+/* シフトあり */
+.bg-blue-400 {
+  background-color: #60a5fa !important;
+}
+
+/* 勤怠あり */
+.bg-green-400 {
+  background-color: #4ade80 !important;
+}
+
+/* 両方 */
+.bg-purple-400 {
+  background-color: #c084fc !important;
 }
