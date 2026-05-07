@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -28,7 +28,6 @@ export default function TeacherShiftPage() {
     const init = async () => {
       const { data } = await supabase.auth.getUser();
       const email = data.user?.email || "";
-
       if (!email) return;
 
       setUserEmail(email);
@@ -46,19 +45,27 @@ export default function TeacherShiftPage() {
     init();
   }, []);
 
-  // 日付を安全に統一
-  const formatDate = (d: Date) => {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+  // 🔥 事前に高速検索用Setを作る（超重要）
+  const shiftSet = useMemo(() => {
+    return new Set(shifts.map((s) => s.date));
+  }, [shifts]);
+
+  const recordSet = useMemo(() => {
+    return new Set(records.map((r) => r.date));
+  }, [records]);
+
+  const getClass = (date: Date) => {
+    const d = date.toISOString().split("T")[0];
+
+    const shift = shiftSet.has(d);
+    const record = recordSet.has(d);
+
+    if (shift && record) return "bg-purple-400 text-white rounded-md";
+    if (shift) return "bg-blue-400 text-white rounded-md";
+    if (record) return "bg-green-400 text-white rounded-md";
+
+    return "";
   };
-
-  const hasShift = (date: string) =>
-    shifts.some((s) => s.date === date);
-
-  const hasRecord = (date: string) =>
-    records.some((r) => r.date === date);
 
   return (
     <main className="p-6 space-y-6">
@@ -70,47 +77,8 @@ export default function TeacherShiftPage() {
       <div className="border rounded p-4">
 
         <Calendar
-          tileClassName={({ date }) => {
-            const d = formatDate(date);
-
-            const shift = hasShift(d);
-            const record = hasRecord(d);
-
-            if (shift && record) {
-              return "bg-purple-400 text-white rounded-md";
-            }
-
-            if (shift) {
-              return "bg-blue-400 text-white rounded-md";
-            }
-
-            if (record) {
-              return "bg-green-400 text-white rounded-md";
-            }
-
-            return "";
-          }}
+          tileClassName={({ date }) => getClass(date)}
         />
-
-        {/* 凡例 */}
-        <div className="flex gap-4 mt-4 text-sm">
-
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-400" />
-            シフト
-          </div>
-
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-green-400" />
-            勤怠
-          </div>
-
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-purple-400" />
-            両方
-          </div>
-
-        </div>
 
       </div>
 
