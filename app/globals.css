@@ -1,18 +1,32 @@
-.react-calendar__tile {
-  border-radius: 8px;
+.react-calendar {
+  border: none;
 }
 
+/* 重要：tileそのものを強制ブロック化 */
+.react-calendar__tile {
+  border-radius: 8px !important;
+  padding: 8px !important;
+}
+
+/* シフト */
 .react-calendar__tile.bg-blue-400 {
   background-color: #60a5fa !important;
   color: white !important;
 }
 
+/* 勤怠 */
 .react-calendar__tile.bg-green-400 {
   background-color: #4ade80 !important;
   color: white !important;
 }
 
+/* 両方 */
 .react-calendar__tile.bg-purple-400 {
   background-color: #c084fc !important;
   color: white !important;
+}
+
+/* hoverは邪魔しない程度に */
+.react-calendar__tile:hover {
+  filter: brightness(0.95);
 }
