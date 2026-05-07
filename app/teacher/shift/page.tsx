@@ -2,79 +2,111 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 type Shift = {
   id: number;
   email: string;
   date: string;
-  status: "available" | "unavailable";
+  start_time: string;
+  hours: number;
+};
+
+type Record = {
+  id: number;
+  email: string;
+  date: string;
 };
 
 export default function TeacherShiftPage() {
-  const [shifts, setShifts] = useState<Shift[]>([]);
   const [userEmail, setUserEmail] = useState("");
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [records, setRecords] = useState<Record[]>([]);
 
   useEffect(() => {
-    fetchUser();
-    fetchShifts();
+    init();
   }, []);
 
-  const fetchUser = async () => {
+  const init = async () => {
     const { data } = await supabase.auth.getUser();
     const email = data.user?.email || "";
+
     setUserEmail(email);
+
+    if (email) {
+      fetchData(email);
+    }
   };
 
-  const fetchShifts = async () => {
-    const { data } = await supabase
-      .from("shifts")
-      .select("*")
-      .order("date", { ascending: false });
+  const fetchData = async (email: string) => {
+    const [{ data: shiftData }, { data: recordData }] = await Promise.all([
+      supabase.from("shifts").select("*").eq("email", email),
+      supabase.from("work_records").select("*").eq("email", email),
+    ]);
 
-    setShifts((data as Shift[]) || []);
+    setShifts((shiftData as Shift[]) || []);
+    setRecords((recordData as Record[]) || []);
   };
 
-  // 自分のシフトだけ
-  const myShifts = shifts.filter(
-    (s) => s.email === userEmail
-  );
+  // 判定
+  const hasShift = (date: string) =>
+    shifts.some((s) => s.date === date);
+
+  const hasRecord = (date: string) =>
+    records.some((r) => r.date === date);
 
   return (
     <main className="p-6 space-y-6">
 
       <h1 className="text-2xl font-bold">
-        シフト確認
+        シフトカレンダー
       </h1>
 
-      {/* 自分のシフト */}
-      <div className="space-y-3">
+      <div className="border rounded p-4">
 
-        {myShifts.map((s) => (
-          <div
-            key={s.id}
-            className="border p-3 rounded flex justify-between"
-          >
+        <Calendar
+          tileClassName={({ date }) => {
+            const d = date.toISOString().split("T")[0];
 
-            <div>
-              <p className="font-bold">
-                {s.date}
-              </p>
-            </div>
+            const shift = hasShift(d);
+            const record = hasRecord(d);
 
-            <div>
-              {s.status === "available" ? (
-                <span className="text-green-600 font-bold">
-                  出勤可能
-                </span>
-              ) : (
-                <span className="text-red-500 font-bold">
-                  不可
-                </span>
-              )}
-            </div>
+            if (shift && record) {
+              return "bg-purple-300"; // 両方
+            }
 
+            if (shift) {
+              return "bg-blue-300"; // シフト
+            }
+
+            if (record) {
+              return "bg-green-300"; // 勤怠
+            }
+
+            return "";
+          }}
+        />
+
+        {/* 凡例 */}
+        <div className="flex gap-4 mt-4 text-sm">
+
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-blue-300" />
+            シフト
           </div>
-        ))}
+
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-green-300" />
+            勤怠
+          </div>
+
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-purple-300" />
+            両方
+          </div>
+
+        </div>
 
       </div>
 
