@@ -28,6 +28,9 @@ export default function TeacherShiftPage() {
     init();
   }, []);
 
+console.log("shifts:", shifts);
+console.log("records:", records);
+
   const init = async () => {
     const { data } = await supabase.auth.getUser();
     const email = data.user?.email || "";
