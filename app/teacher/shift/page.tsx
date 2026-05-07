@@ -13,7 +13,7 @@ type Shift = {
   hours: number;
 };
 
-type Record = {
+type WorkRecord = {
   id: number;
   email: string;
   date: string;
@@ -22,53 +22,37 @@ type Record = {
 export default function TeacherShiftPage() {
   const [userEmail, setUserEmail] = useState("");
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [records, setRecords] = useState<Record[]>([]);
+  const [records, setRecords] = useState<WorkRecord[]>([]);
 
   useEffect(() => {
-  init();
-}, []);
+    init();
+  }, []);
 
-const init = async () => {
-  const { data } = await supabase.auth.getUser();
-  const email = data.user?.email || "";
+  const init = async () => {
+    const { data } = await supabase.auth.getUser();
+    const email = data.user?.email || "";
 
-  setUserEmail(email);
+    setUserEmail(email);
+    if (!email) return;
 
-  if (email) {
-    fetchShifts(email);
-  }
-};
-
-const fetchShifts = async (email: string) => {
-  const { data, error } = await supabase
-    .from("shifts")
-    .select("*")
-    .eq("email", email);
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  setShifts(data || []);
-};
-
-  const fetchData = async (email: string) => {
     const [{ data: shiftData }, { data: recordData }] = await Promise.all([
       supabase.from("shifts").select("*").eq("email", email),
       supabase.from("work_records").select("*").eq("email", email),
     ]);
 
-    setShifts((shiftData as Shift[]) || []);
-    setRecords((recordData as Record[]) || []);
+    setShifts(shiftData || []);
+    setRecords(recordData || []);
   };
 
-  // 判定
+  // 日付比較用（重要）
+  const normalize = (date: string) =>
+    new Date(date).toISOString().split("T")[0];
+
   const hasShift = (date: string) =>
-    shifts.some((s) => s.date === date);
+    shifts.some((s) => normalize(s.date) === date);
 
   const hasRecord = (date: string) =>
-    records.some((r) => r.date === date);
+    records.some((r) => normalize(r.date) === date);
 
   return (
     <main className="p-6 space-y-6">
@@ -81,42 +65,42 @@ const fetchShifts = async (email: string) => {
 
         <Calendar
           tileClassName={({ date }) => {
-  const d = date.toISOString().split("T")[0];
+            const d = date.toISOString().split("T")[0];
 
-  const shift = hasShift(d);
-  const record = hasRecord(d);
+            const shift = hasShift(d);
+            const record = hasRecord(d);
 
-  if (shift && record) {
-    return "bg-purple-400 text-white rounded-md";
-  }
+            if (shift && record) {
+              return "bg-purple-400 text-white rounded-md";
+            }
 
-  if (shift) {
-    return "bg-blue-400 text-white rounded-md";
-  }
+            if (shift) {
+              return "bg-blue-400 text-white rounded-md";
+            }
 
-  if (record) {
-    return "bg-green-400 text-white rounded-md";
-  }
+            if (record) {
+              return "bg-green-400 text-white rounded-md";
+            }
 
-  return "";
-}}
+            return "";
+          }}
         />
 
         {/* 凡例 */}
         <div className="flex gap-4 mt-4 text-sm">
 
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-300" />
+            <div className="w-3 h-3 bg-blue-400" />
             シフト
           </div>
 
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-green-300" />
+            <div className="w-3 h-3 bg-green-400" />
             勤怠
           </div>
 
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-purple-300" />
+            <div className="w-3 h-3 bg-purple-400" />
             両方
           </div>
 
