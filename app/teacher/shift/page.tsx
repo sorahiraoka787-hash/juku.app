@@ -81,25 +81,25 @@ const fetchShifts = async (email: string) => {
 
         <Calendar
           tileClassName={({ date }) => {
-            const d = date.toISOString().split("T")[0];
+  const d = date.toISOString().split("T")[0];
 
-            const shift = hasShift(d);
-            const record = hasRecord(d);
+  const shift = hasShift(d);
+  const record = hasRecord(d);
 
-            if (shift && record) {
-              return "bg-purple-300"; // 両方
-            }
+  if (shift && record) {
+    return "bg-purple-400 text-white rounded-md";
+  }
 
-            if (shift) {
-              return "bg-blue-300"; // シフト
-            }
+  if (shift) {
+    return "bg-blue-400 text-white rounded-md";
+  }
 
-            if (record) {
-              return "bg-green-300"; // 勤怠
-            }
+  if (record) {
+    return "bg-green-400 text-white rounded-md";
+  }
 
-            return "";
-          }}
+  return "";
+}}
         />
 
         {/* 凡例 */}
