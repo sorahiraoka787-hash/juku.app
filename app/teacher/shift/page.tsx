@@ -25,26 +25,28 @@ export default function TeacherShiftPage() {
   const [records, setRecords] = useState<WorkRecord[]>([]);
 
   useEffect(() => {
+    const init = async () => {
+      const { data } = await supabase.auth.getUser();
+      const email = data.user?.email || "";
+
+      if (!email) return;
+
+      setUserEmail(email);
+
+      const [{ data: shiftData }, { data: recordData }] =
+        await Promise.all([
+          supabase.from("shifts").select("*").eq("email", email),
+          supabase.from("work_records").select("*").eq("email", email),
+        ]);
+
+      setShifts(shiftData || []);
+      setRecords(recordData || []);
+    };
+
     init();
   }, []);
 
-  const init = async () => {
-    const { data } = await supabase.auth.getUser();
-    const email = data.user?.email || "";
-
-    setUserEmail(email);
-    if (!email) return;
-
-    const [{ data: shiftData }, { data: recordData }] = await Promise.all([
-      supabase.from("shifts").select("*").eq("email", email),
-      supabase.from("work_records").select("*").eq("email", email),
-    ]);
-
-    setShifts(shiftData || []);
-    setRecords(recordData || []);
-  };
-
-  // 🔥 完全ローカル日付変換（重要）
+  // 日付を安全に統一
   const formatDate = (d: Date) => {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
