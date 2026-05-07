@@ -25,19 +25,33 @@ export default function TeacherShiftPage() {
   const [records, setRecords] = useState<Record[]>([]);
 
   useEffect(() => {
-    init();
-  }, []);
+  init();
+}, []);
 
-  const init = async () => {
-    const { data } = await supabase.auth.getUser();
-    const email = data.user?.email || "";
+const init = async () => {
+  const { data } = await supabase.auth.getUser();
+  const email = data.user?.email || "";
 
-    setUserEmail(email);
+  setUserEmail(email);
 
-    if (email) {
-      fetchData(email);
-    }
-  };
+  if (email) {
+    fetchShifts(email);
+  }
+};
+
+const fetchShifts = async (email: string) => {
+  const { data, error } = await supabase
+    .from("shifts")
+    .select("*")
+    .eq("email", email);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setShifts(data || []);
+};
 
   const fetchData = async (email: string) => {
     const [{ data: shiftData }, { data: recordData }] = await Promise.all([
