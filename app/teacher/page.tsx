@@ -36,7 +36,7 @@ export default function TeacherPage() {
         </Link>
 
         <Link
-          href="/teacher/shifts"
+          href="/teacher/shift"
           className="border p-4 rounded hover:bg-gray-50"
         >
           📅 シフト確認
