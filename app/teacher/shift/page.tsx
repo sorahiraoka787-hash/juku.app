@@ -28,9 +28,6 @@ export default function TeacherShiftPage() {
     init();
   }, []);
 
-console.log("shifts:", shifts);
-console.log("records:", records);
-
   const init = async () => {
     const { data } = await supabase.auth.getUser();
     const email = data.user?.email || "";
@@ -47,15 +44,19 @@ console.log("records:", records);
     setRecords(recordData || []);
   };
 
-  // 日付比較用（重要）
-  const normalize = (date: string) =>
-    new Date(date).toISOString().split("T")[0];
+  // 🔥 完全ローカル日付変換（重要）
+  const formatDate = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   const hasShift = (date: string) =>
-    shifts.some((s) => normalize(s.date) === date);
+    shifts.some((s) => s.date === date);
 
   const hasRecord = (date: string) =>
-    records.some((r) => normalize(r.date) === date);
+    records.some((r) => r.date === date);
 
   return (
     <main className="p-6 space-y-6">
@@ -68,7 +69,7 @@ console.log("records:", records);
 
         <Calendar
           tileClassName={({ date }) => {
-            const d = date.toISOString().split("T")[0];
+            const d = formatDate(date);
 
             const shift = hasShift(d);
             const record = hasRecord(d);
