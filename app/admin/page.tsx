@@ -12,32 +12,20 @@ export default function AdminPage() {
 
       <div className="grid gap-4">
 
+        {/* 授業作成 */}
         <Link
-          href="/admin/shift"
-          className="border p-4 rounded hover:bg-gray-50"
+          href="/admin/lessons"
+          className="border p-4 rounded hover:bg-gray-100 transition"
         >
-          📅 シフト管理
+          📚 授業作成
         </Link>
 
+        {/* 未報告・集計 */}
         <Link
-          href="/admin/payroll"
-          className="border p-4 rounded hover:bg-gray-50"
+          href="/admin/dashboard"
+          className="border p-4 rounded hover:bg-gray-100 transition"
         >
-          💰 給与管理
-        </Link>
-
-        <Link
-          href="/admin/teachers"
-          className="border p-4 rounded hover:bg-gray-50"
-        >
-          👨‍🏫 講師一覧
-        </Link>
-
-        <Link
-          href="/admin/attendance"
-          className="border p-4 rounded hover:bg-gray-50"
-        >
-          ⏱ 勤怠確認
+          📊 未報告・集計
         </Link>
 
       </div>
